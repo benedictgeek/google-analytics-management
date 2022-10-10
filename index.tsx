@@ -1,5 +1,7 @@
 declare global {
-  interface Window {}
+  interface Window {
+    dataLayer: any;
+  }
 }
 
 const isInClientWindow = typeof window != "undefined";
@@ -114,4 +116,18 @@ const appendTags = (tags: TagTypes) => {
   return;
 };
 
-export { appendTags };
+interface googleEventProps {
+  event: string;
+  [key: string]: string;
+}
+
+const sendGAEvent = ({ event, ...props }: googleEventProps) => {
+  if (!isInClientWindow) return;
+  window.dataLayer = window.dataLayer || [];
+  window?.dataLayer?.push({
+    event: event,
+    ...props,
+  });
+};
+
+export { appendTags, sendGAEvent, TagTypes, googleEventProps };
