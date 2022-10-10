@@ -1,7 +1,15 @@
+declare global {
+  interface Window {}
+}
+
+const isInClientWindow = typeof window != "undefined";
+
 type TagTypes = string | string[];
 
 const appendTags = (tags: TagTypes) => {
-  if (tags == null) return "";
+  //for SSR, do not execute on the server
+  if (!isInClientWindow) return;
+  if (tags == null) return;
 
   let googleTags: string[] = [];
 
@@ -12,6 +20,8 @@ const appendTags = (tags: TagTypes) => {
   }
 
   let scriptTagString = "";
+
+  const gtagHeadScripts: HTMLScriptElement[] = [];
 
   for (let index = 0; index < googleTags.length; index++) {
     const googleTag = googleTags[index];
@@ -58,9 +68,19 @@ const appendTags = (tags: TagTypes) => {
       )
         window?.document?.body.prepend(node);
     } else {
-      //for direct tag management without containers
+      //for direct tag management without GTM containers
       scriptTagString =
         scriptTagString + `gtag('config', '${trimmedGoogleTag}'); \n\n`;
+      let scriptNode = window?.document?.createElement("script");
+      scriptNode.async = true;
+      scriptNode.src = `https://www.googletagmanager.com/gtag/js?id=${trimmedGoogleTag}`;
+
+      //ensure duplicates scripts are not allowed
+      if (
+        window?.document.querySelector(`script[src='${scriptNode.src}']`) ==
+        null
+      )
+        gtagHeadScripts.push(scriptNode);
     }
   }
 
@@ -69,9 +89,30 @@ const appendTags = (tags: TagTypes) => {
     let scriptNode = window?.document?.createElement("script");
     scriptNode.innerHTML =
       `window.dataLayer = window.dataLayer || []; \n
-    function gtag(){dataLayer.push(arguments);} \n
-    gtag('js', new Date()); \n` + scriptTagString;
+      ${
+        gtagHeadScripts.length > 0
+          ? `
+          function gtag(){dataLayer.push(arguments);} \n
+      gtag('js', new Date()); \n \n`
+          : ""
+      }` + scriptTagString;
 
-    window.document.head.prepend(scriptNode);
+    //finding any previous tag using document.evaluate
+    const previousScriptCode = document
+      .evaluate("//script[contains(., 'window.dataLayer')]", document.head)
+      //   .evaluate("//script[contains(., 'function gtag()')]", document.head)
+      .iterateNext();
+
+    //ensure duplicates scripts are not allowed
+    if (previousScriptCode == null) window.document.head.prepend(scriptNode);
+
+    for (let index = 0; index < gtagHeadScripts.length; index++) {
+      const gtagHeadScript = gtagHeadScripts[index];
+      window.document.head.prepend(gtagHeadScript);
+    }
   }
+
+  return;
 };
+
+export { appendTags };
