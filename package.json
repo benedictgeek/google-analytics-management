@@ -2,6 +2,11 @@
   "name": "google-tag-management",
   "version": "1.0.0",
   "description": "A utility package to add google analytics tags to your projects",
+  "keywords": [
+    "gtm",
+    "google analytics",
+    "google-tag-manager"
+  ],
   "main": "dist/index.js",
   "files": [
     "dist"
