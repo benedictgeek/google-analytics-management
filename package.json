@@ -1,7 +1,7 @@
 {
   "name": "google-tag-management",
   "version": "1.0.0",
-  "description": "A utility package to add google tags to your projects",
+  "description": "A utility package to add google analytics tags to your projects",
   "main": "dist/index.js",
   "files": [
     "dist"

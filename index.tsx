@@ -100,7 +100,6 @@ const appendTags = (tags: TagTypes) => {
     //finding any previous tag using document.evaluate
     const previousScriptCode = document
       .evaluate("//script[contains(., 'window.dataLayer')]", document.head)
-      //   .evaluate("//script[contains(., 'function gtag()')]", document.head)
       .iterateNext();
 
     //ensure duplicates scripts are not allowed
